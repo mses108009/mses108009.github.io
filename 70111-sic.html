@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>櫻桃蘿蔔吸水力虛擬實驗室</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #eef2f3; margin: 0; padding: 20px; }
+        .lab-container { max-width: 1000px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        header { background: #27ae60; color: white; padding: 20px; text-align: center; }
+        
+        .tabs { display: flex; background: #2ecc71; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; color: white; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .tab-btn:hover { background: #27ae60; }
+        .tab-btn.active { background: #1e8449; font-weight: bold; }
+
+        .content { display: none; padding: 30px; min-height: 400px; }
+        .content.active { display: block; }
+
+        /* 物件操作區樣式 */
+        .workspace { border: 2px dashed #bdc3c7; border-radius: 10px; padding: 20px; background: #fafafa; margin-top: 10px; text-align: center; }
+        .item-card { display: inline-block; width: 180px; margin: 10px; padding: 15px; background: white; border: 1px solid #ddd; border-radius: 8px; vertical-align: top; }
+        .btn-action { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; }
+        .btn-action:hover { background: #2980b9; }
+        
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 5px; background: #d5f5e3; color: #1e8449; font-weight: bold; border-left: 5px solid #27ae60; }
+        
+        /* 雷射光視覺效果 */
+        #laser-screen { width: 100%; height: 100px; background: #000; margin-top: 10px; border-radius: 5px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
+        .fringe { height: 60px; width: 2px; margin: 0 4px; display: none; }
+        .green-laser { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .purple-laser { background: #a020f0; box-shadow: 0 0 5px #a020f0; opacity: 0.3; }
+        
+        .formula-box { background: #f8f9fa; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; margin: 10px 0; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<div class="lab-container">
+    <header>
+        <h1>櫻桃蘿蔔吸水力虛擬實驗室</h1>
+        <p>探討植物生長對土壤電容含水量之影響</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'prep')">1. 播種準備</button>
+        <button class="tab-btn" onclick="openTab(event, 'sensor')">2. 電容測量</button>
+        <button class="tab-btn" onclick="openTab(event, 'laser')">3. 雷射觀測</button>
+        <button class="tab-btn" onclick="openTab(event, 'micro')">4. 顯微分析</button>
+    </div>
+
+    <!-- 階段 1: 播種 -->
+    <div id="prep" class="content active">
+        <h3>第一階段：最佳化播種密度</h3>
+        <p>根據研究，在 100g 土壤中加入 10mL 水的環境下，測試不同種子數量的資源利用率 [1, 2]。</p>
+        <div class="workspace">
+            <div class="item-card">
+                <strong>櫻桃蘿蔔種子</strong><br>
+                <input type="number" id="seedCount" value="1" min="1" max="50" style="width: 60px; margin-top:10px;"> 顆
+                <button class="btn-action" onclick="plantSeeds()">執行播種</button>
+            </div>
+            <div class="item-card">
+                <strong>植物生長箱</strong><br>
+                設定：20℃ / 55% 濕度<br>
+                日照：12 小時 [1, 3]
+            </div>
+            <div id="prep-result" class="result-box" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- 階段 2: 電容計 -->
+    <div id="sensor" class="content">
+        <h3>第二階段：土壤含水量感測</h3>
+        <p>利用水 (ε≈81) 與土壤 (ε≈3.5) 的介電常數差異，測量電容值來換算水分 [4]。</p>
+        <div class="workspace">
+            <div class="item-card">
+                <strong>測量工具選擇</strong>
+                <select id="sensorType" class="btn-action" style="background:#9b59b6">
+                    <option value="probe">探針電極 (圓柱形)</option>
+                    <option value="plates">鋅銅片 (平行板)</option>
+                </select>
+                <button class="btn-action" onclick="measureCapacitance()">插入土壤測量</button>
+            </div>
+            <div class="formula-box">
+                關係式：C = -52.04 + 31.33 * [1 + 81*M<sub>水</sub> / (3.5*M<sub>土</sub>)] [4, 5]
+            </div>
+            <div id="sensor-result" class="result-box" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- 階段 3: 雷射 -->
+    <div id="laser" class="content">
+        <h3>第三階段：雷射干涉測徑</h3>
+        <p>選擇雷射光源照射根部。利用雙狹縫干涉公式計算根直徑 [6, 7]。</p>
+        <div class="workspace">
+            <div>
+                <button class="btn-action" style="background:#27ae60; width:150px;" onclick="fireLaser('green')">啟動綠光雷射</button>
+                <button class="btn-action" style="background:#8e44ad; width:150px;" onclick="fireLaser('purple')">啟動紫光雷射</button>
+            </div>
+            
+            <div id="laser-screen">
+                <span id="laser-msg" style="color:white;">點擊按鈕啟動光源</span>
+                <!-- 干涉條紋模擬 -->
+                <div class="fringe green-laser"></div><div class="fringe green-laser"></div><div class="fringe green-laser"></div>
+                <div class="fringe green-laser" style="width:10px; margin:0 15px;"></div>
+                <div class="fringe green-laser"></div><div class="fringe green-laser"></div><div class="fringe green-laser"></div>
+                
+                <div class="fringe purple-laser"></div><div class="fringe purple-laser"></div><div class="fringe purple-laser"></div>
+            </div>
+            
+            <div id="laser-result" class="result-box" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- 階段 4: 顯微分析 -->
+    <div id="micro" class="content">
+        <h3>第四階段：影像與顯微分析</h3>
+        <p>觀察根毛在成熟部與延長部的分布，並使用 ImageJ 分析表面積 [8, 9]。</p>
+        <div class="workspace">
+            <div class="item-card">
+                <strong>亞甲藍液</strong><br>
+                用於根部染色 [8]
+                <button class="btn-action" onclick="showMicro('stain')">進行染色</button>
+            </div>
+            <div class="item-card">
+                <strong>ImageJ 軟體</strong><br>
+                轉為 8-bit 分析 [4, 9]
+                <button class="btn-action" style="background:#e67e22" onclick="showMicro('imagej')">計算根面積</button>
+            </div>
+            <div id="micro-result" class="result-box" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, content, tablinks;
+        content = document.getElementsByClassName("content");
+        for (i = 0; i < content.length; i++) content[i].classList.remove("active");
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    function plantSeeds() {
+        const count = document.getElementById('seedCount').value;
+        const res = document.getElementById('prep-result');
+        res.style.display = 'block';
+        if(count == 20) {
+            res.innerHTML = `已播種 20 顆。研究顯示：這是 100g 土壤環境下最佳化資源利用條件 (發芽率約 95%) [2, 6]！`;
+        } else if(count > 30) {
+            res.innerHTML = `已播種 ${count} 顆。注意：超過 30 顆可能導致種子間競爭激烈，降低發芽率 [2, 6]。`;
+        } else {
+            res.innerHTML = `已播種 ${count} 顆。生長箱已設定為 20℃ 與 55% 濕度，等待萌芽... [3]`;
+        }
+    }
+
+    function measureCapacitance() {
+        const type = document.getElementById('sensorType').value;
+        const res = document.getElementById('sensor-result');
+        res.style.display = 'block';
+        if(type === 'probe') {
+            res.innerHTML = "使用探針電極：操作簡便，數據穩定，為本研究最終採用的測量方式 [1, 10]！";
+        } else {
+            res.innerHTML = "使用鋅銅片：需使用砂紙磨掉氧化層。測得電容值較高，趨勢與探針相似 [10, 11]。";
+        }
+    }
+
+    function fireLaser(color) {
+        const msg = document.getElementById('laser-msg');
+        const res = document.getElementById('laser-result');
+        const fringes = document.querySelectorAll('.fringe');
+        res.style.display = 'block';
+        msg.style.display = 'none';
+        
+        // 重置條紋
+        fringes.forEach(f => f.style.display = 'none');
+
+        if(color === 'green') {
+            document.querySelectorAll('.green-laser').forEach(f => f.style.display = 'block');
+            res.innerHTML = "綠光雷射 (532nm)：產生清晰的干涉亮紋。計算公式：d = λL / 2S [6, 7]！";
+        } else {
+            document.querySelectorAll('.purple-laser').forEach(f => f.style.display = 'block');
+            res.innerHTML = "紫/藍光雷射：實驗初期曾嘗試，但因干涉效果較不好而不採用 [7]。";
+        }
+    }
+
+    function showMicro(action) {
+        const res = document.getElementById('micro-result');
+        res.style.display = 'block';
+        if(action === 'stain') {
+            res.innerHTML = "已滴入亞甲藍液：根部對比度增強，可觀察到成熟部密生的根毛 [8, 12]！";
+        } else {
+            res.innerHTML = "ImageJ 分析：影像已轉為 8-bit。計算結果顯示第 2-4 天根毛生長最快，水分消耗量達到高峰 [9, 13]！";
+        }
+    }
+</script>
+
+</body>
+</html>
