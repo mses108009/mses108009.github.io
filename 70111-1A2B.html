@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚂 鐵道密碼列車</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:"Microsoft JhengHei",sans-serif;
+    background:linear-gradient(to bottom,#0f172a,#1e293b);
+    min-height:100vh;
+    color:white;
+}
+
+.header{
+    background:#0b1220;
+    padding:20px;
+    text-align:center;
+    border-bottom:4px solid #facc15;
+}
+
+.header h1{
+    font-size:2.2rem;
+}
+
+.header p{
+    color:#cbd5e1;
+}
+
+.station-board{
+    width:90%;
+    max-width:900px;
+    margin:30px auto;
+    background:#111827;
+    border:6px solid #374151;
+    border-radius:15px;
+    overflow:hidden;
+    box-shadow:0 0 25px rgba(0,0,0,.5);
+}
+
+.board-title{
+    background:#facc15;
+    color:black;
+    font-weight:bold;
+    padding:15px;
+    text-align:center;
+    font-size:1.2rem;
+}
+
+.input-area{
+    padding:25px;
+    text-align:center;
+}
+
+input{
+    width:220px;
+    padding:12px;
+    font-size:1.2rem;
+    text-align:center;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    padding:12px 20px;
+    margin-left:10px;
+    font-size:1rem;
+    border:none;
+    border-radius:8px;
+    background:#dc2626;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#b91c1c;
+}
+
+.info{
+    text-align:center;
+    color:#94a3b8;
+    margin-bottom:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    background:#1f2937;
+    color:#facc15;
+    padding:12px;
+}
+
+td{
+    padding:12px;
+    border-top:1px solid #374151;
+    text-align:center;
+}
+
+tr:nth-child(even){
+    background:#172033;
+}
+
+.result{
+    text-align:center;
+    padding:20px;
+    font-size:1.3rem;
+    font-weight:bold;
+}
+
+.win{
+    color:#4ade80;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    50%{
+        opacity:.5;
+    }
+}
+
+.train{
+    font-size:2rem;
+    text-align:center;
+    padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>🚂 鐵道密碼列車</h1>
+    <p>猜出神秘列車代碼，讓列車順利進站！</p>
+</div>
+
+<div class="station-board">
+
+    <div class="board-title">
+        月台資訊看板
+    </div>
+
+    <div class="input-area">
+        <input
+            type="text"
+            id="guess"
+            maxlength="4"
+            placeholder="輸入4位數字">
+
+        <button onclick="checkGuess()">🚉 發車</button>
+    </div>
+
+    <div class="info">
+        A = 車廂號碼與位置正確<br>
+        B = 車廂號碼正確但停錯位置
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>車次代碼</th>
+                <th>月台資訊</th>
+            </tr>
+        </thead>
+        <tbody id="history"></tbody>
+    </table>
+
+    <div class="result" id="message"></div>
+
+    <div class="train">
+        🚂 🚃 🚃 🚃 🚃
+    </div>
+
+</div>
+
+<script>
+
+let answer = createAnswer();
+
+function createAnswer(){
+
+    let nums = [];
+
+    while(nums.length < 4){
+
+        let n = Math.floor(Math.random()*10);
+
+        if(!nums.includes(n)){
+            nums.push(n);
+        }
+    }
+
+    return nums.join("");
+}
+
+function checkGuess(){
+
+    const guess =
+        document.getElementById("guess").value;
+
+    if(!/^\d{4}$/.test(guess)){
+        alert("請輸入4位數字");
+        return;
+    }
+
+    let unique =
+        new Set(guess.split(""));
+
+    if(unique.size !== 4){
+        alert("數字不可重複");
+        return;
+    }
+
+    let A = 0;
+    let B = 0;
+
+    for(let i=0;i<4;i++){
+
+        if(guess[i]===answer[i]){
+            A++;
+        }
+        else if(answer.includes(guess[i])){
+            B++;
+        }
+    }
+
+    const row =
+        document.createElement("tr");
+
+    row.innerHTML = `
+        <td>${guess}</td>
+        <td>🚂 ${A}A ${B}B</td>
+    `;
+
+    document
+        .getElementById("history")
+        .prepend(row);
+
+    document
+        .getElementById("guess")
+        .value = "";
+
+    if(A===4){
+
+        document
+            .getElementById("message")
+            .innerHTML =
+            `🎉 <span class="win">
+            列車成功進站！
+            神秘車次：${answer}
+            </span>`;
+
+        document
+            .querySelector("button")
+            .disabled = true;
+    }
+}
+
+</script>
+
+</body>
+</html>
